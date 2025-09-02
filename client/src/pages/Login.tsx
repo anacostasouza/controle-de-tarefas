@@ -1,15 +1,34 @@
-import { auth, provider } from "../services/firebase";
+import { auth, db, provider } from "../services/firebase";
 import {
     signInWithPopup,
     signInWithEmailAndPassword,
 } from "firebase/auth";
-import { useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            const checkUser = async () => {
+                if (user) {
+                    const userRef = doc(db, "users", user.uid);
+                    const snap = await getDoc(userRef);
+                    if (snap.exists()) {
+                        navigate("/tasks");
+                    } else {
+                        navigate("/profile");
+                    }
+                }
+            };
+            checkUser();
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     const loginEmail = async () => {
         await signInWithEmailAndPassword(auth, email, password)
@@ -18,11 +37,6 @@ export function Login() {
     const loginGoogle = async () => {
         await signInWithPopup(auth, provider);
     };
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            navigate("/tasks");
-        }
-    });
 
     return (
         <div>
