@@ -1,9 +1,12 @@
-import { useAuth } from "../hooks/useAuth";
 import { useHistory } from "../hooks/useHistory";
 import { HistoryChart } from "../components/HistoryChart";
+import type { User } from "firebase/auth";
 
-export function History() {
-  const { user } = useAuth();
+interface HistoryProps {
+  user: User | null;
+}
+
+export function History({ user }: HistoryProps) {
   const { tasks, chartData, loading } = useHistory(user?.uid || "");
 
   if (loading) return <p>Carregando histórico...</p>;

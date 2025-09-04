@@ -1,18 +1,19 @@
 import { useState, type FormEvent } from "react";
+import type { TaskPriority } from "../types/task";
 
 interface TaskFormProps {
-  onAdd: (title: string, priority: string, category: string) => void;
+  onAdd: (title: string, category?: string, priority?: TaskPriority) => void;
 }
 
 export function TaskForm({ onAdd }: TaskFormProps) {
   const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState("medium");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
   const [category, setCategory] = useState("Trabalho");
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(title, priority, category);
+    onAdd(title, category || "Geral", priority || "medium");
     setTitle("");
     setPriority("medium");
     setCategory("Trabalho");
@@ -27,7 +28,7 @@ export function TaskForm({ onAdd }: TaskFormProps) {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+      <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
         <option value="low">Baixa</option>
         <option value="medium">Média</option>
         <option value="high">Alta</option>
