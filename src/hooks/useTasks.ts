@@ -1,32 +1,60 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react';
-import { listTasks, addTask, updateTask, markTaskDeleted } from '../api/firestore';
-import type { Task } from '../types/task';
+import { useState, useEffect } from "react";
+import {
+  listTasks,
+  addTask,
+  updateTask,
+  markTaskDeleted,
+} from "../api/firestore";
+import type { Task, TaskPriority } from "../types/task";
+import { serverTimestamp } from "firebase/firestore";
 
 export function useTasks(userId: string) {
-    const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    if (!userId) return;
 
     const fetchTasks = async () => {
-        const data = await listTasks(userId);
-        setTasks(data as Task[]);
-    }
+      try {
+        const allTasks = await listTasks(userId);
+        setTasks(allTasks);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-    const addTaskHandler = async (title: string) => {
-        await addTask(title, userId);
-        fetchTasks();
-    }
+    fetchTasks();
+  }, [userId]);
 
-    const completeTaskHandler = async (id: string) => {
-        await updateTask(id, { status: 'completed', completedAt: new Date() });
-        fetchTasks();
-    }
+  const addTaskHandler = async (
+    title: string,
+    category = "Geral",
+    priority: TaskPriority = "medium"
+  ) => {
+    await addTask(title, userId, category, priority);
+    const allTasks = await listTasks(userId);
+    setTasks(allTasks);
+  };
 
-    const deleteTaskHandler = async (id: string) => {
-        await markTaskDeleted(id);
-        fetchTasks();
-    }
+  const completeTaskHandler = async (taskId: string) => {
+    await updateTask(taskId, {
+      status: "completed",
+      completedAt: serverTimestamp(),
+    });
+    const allTasks = await listTasks(userId);
+    setTasks(allTasks);
+  };
 
-    useEffect(() => { fetchTasks(); }, [userId]);
+  const deleteTaskHandler = async (taskId: string) => {
+    await markTaskDeleted(taskId);
+    const allTasks = await listTasks(userId);
+    setTasks(allTasks);
+  };
 
-    return { tasks, addTask: addTaskHandler, completeTask: completeTaskHandler, deleteTask: deleteTaskHandler };
+  return {
+    tasks,
+    addTask: addTaskHandler,
+    completeTask: completeTaskHandler,
+    deleteTask: deleteTaskHandler,
+  };
 }

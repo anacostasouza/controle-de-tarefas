@@ -1,40 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
-import { db } from "../services/firebase";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { useAuth } from "../hooks/useAuth";
+import { useHistory } from "../hooks/useHistory";
+import { HistoryChart } from "../components/HistoryChart";
 
-interface HistoryProps {
-  user: any;
-}
+export function History() {
+  const { user } = useAuth();
+  const { tasks, chartData, loading } = useHistory(user?.uid || "");
 
-export function History({ user }: HistoryProps) {
-  const [tasks, setTasks] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchHistory = async () => {
-      const q = query(
-        collection(db, "tasks"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc") // Mostra as mais recentes primeiro
-      );
-      const snapshot = await getDocs(q);
-      const allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setTasks(allTasks);
-    };
-
-    fetchHistory();
-  }, [user]);
+  if (loading) return <p>Carregando histórico...</p>;
 
   return (
-    <div>
-      <h2>Histórico de Tarefas</h2>
+    <div className="container">
+      <h1>Histórico de Tarefas</h1>
+
+      <HistoryChart chartData={chartData} />
+
       <ul>
         {tasks.map((task) => (
           <li key={task.id}>
-            {task.title} - <strong>{task.status}</strong>
-            {task.deletedAt && <span> (Excluída)</span>}
+            {task.title} - {task.status} ({task.category})
           </li>
         ))}
       </ul>

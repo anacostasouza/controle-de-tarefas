@@ -15,13 +15,14 @@ export function ProfileForm({
 }: ProfileFormProps) {
   return (
     <div className="profile-form">
+      <h1>Nome</h1>
       <input
         type="text"
         placeholder="Nome"
         value={name}
         onChange={(e) => onChangeName(e.target.value)}
       />
-
+      <h1>Email</h1>
       <input
         type="email"
         placeholder="Email"
